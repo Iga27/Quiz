@@ -1,0 +1,138 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+     
+    <title>Quiz</title>
+    <script src="Scripts/jquery-3.1.1.js"></script>
+    <script src="Scripts/jquery-3.1.1.min.js"></script>
+    <script type="text/javascript" src="https://ajax.aspnetcdn.com/ajax/knockout/knockout-3.4.0.js"></script>
+    <link href="Content/bootstrap.css" rel="stylesheet" />
+</head>
+<body>
+
+    <h3 class="text-center" id="question">Example heading <span class="label label-primary"  ></span></h3>
+
+    <form data-bind="submit:toAnswer">
+        <div   class="container text-center">
+            <br>
+            <input type="hidden" id="questionid" name="questionid" value="" />
+             <input type="radio" data-bind="value: optionValue1"   name="optradio" checked><label id="option1" class="radio-inline"  ></label>
+             <input type="radio" data-bind="value: optionValue2"   name="optradio"><label id="option2" class="radio-inline"></label>
+            <input type="radio" data-bind="value: optionValue3"  name="optradio"><label id="option3" class="radio-inline"></label>
+            <br><br><br>
+            <input   class="btn btn-default " type="submit" value="Ответить">
+
+            <br><br>
+            <span id="result" class="label label-default">результат</span>
+            </div>
+         
+</form>
+    <button class="btn btn-default text-center">След вопрос</button>
+     
+        <script type="text/javascript">
+            $(document).ready(function () {
+                $.ajax
+                    ({
+                        url: 'api/quiz',
+                        type: 'GET',
+
+                        dataType: 'JSON',
+                        success: function (data) {
+                             
+                            $('#option1').text(data.Options[0]["OptionText"]);
+                            
+                            $('#option2').text(data.Options[1]["OptionText"]);
+                             
+                            $('#option3').text(data.Options[2]["OptionText"]);
+                             
+                            $('#question').text(data.QuestionText);
+                            $('input[type=hidden]').val(data.QuestionId);
+                            viewModel.optionValue1(data.Options[0]["OptionId"]);
+                            viewModel.optionValue2(data.Options[1]["OptionId"]);
+                            viewModel.optionValue3(data.Options[2]["OptionId"]);
+                            
+                        },
+                        error: function () {
+                            $('#div').html('<p>Something went wrong. Please try again later.</p>');
+                        }
+                    });
+            });
+
+            $(function () {
+                $('button').click(function () {
+                    $.ajax
+                        ({
+                            url: 'api/quiz',
+                            type: 'GET',
+
+                            dataType: 'JSON', //??????? it a json,but why we use it this way "data.Options[0] etc ?"
+                            success: function (data) {
+                                $('#result').text('результат');
+                                $('#option1').text(data.Options[0]["OptionText"]);
+
+                                $('#option2').text(data.Options[1]["OptionText"]);
+
+                                $('#option3').text(data.Options[2]["OptionText"]);
+
+                                $('#question').text(data.QuestionText);
+                                $('input[type=hidden]').val(data.QuestionId);
+                                viewModel.optionValue1(data.Options[0]["OptionId"]);
+                                viewModel.optionValue2(data.Options[1]["OptionId"]);
+                                viewModel.optionValue3(data.Options[2]["OptionId"]);
+
+                            },
+                            error: function () {
+                                $('#div').html('<p>Something went wrong. Please try again later.</p>');
+                            }
+                        });
+                    });
+                });
+            
+     
+
+
+            var viewModel = {
+                 
+                 optionValue1 : ko.observable(),
+                 optionValue2 : ko.observable(),
+                 optionValue3 : ko.observable(),
+
+                toAnswer: function()
+                {
+                    var optionId = $('input[name=optradio]:checked').val();
+                    var questionId = $('input[type=hidden]').val();
+                    var answer =
+                        {
+                            OptionId: optionId,
+                            QuestionId:questionId,
+                        };
+                    $.ajax({
+                        url: '/api/quiz/answer',
+                        type: 'POST',
+                        data: JSON.stringify(answer),
+                        contentType: "application/json;charset=utf-8",
+                        dataType: 'text',
+                        success: function (data) {
+                            //$("#result").attr("visibility", "visible");
+                            if (data=='false')
+                                $('#result').text('неправильно');
+                            if (data == 'true')
+                                $('#result').text('правильно');
+
+                        }
+
+                    });
+                }
+            };
+
+             
+            ko.applyBindings(viewModel);
+
+
+        </script>
+
+
+
+</body>
+</html>

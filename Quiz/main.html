@@ -1,0 +1,151 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>vue.js</title>
+    
+    <script src="Scripts/jquery-3.1.1.js"></script>
+    <script src="Scripts/jquery-3.1.1.min.js"></script>
+    <script src="https://unpkg.com/vue"></script>
+    <link href="Content/bootstrap.css" rel="stylesheet" />
+</head>
+<body>
+    <div id="app">
+
+    <h3 class="text-center">{{questiontext}}<span class="label label-primary"></span></h3>
+    <form>
+        <div class="container text-center">
+            <br>
+            <input type="hidden"  v-bind:value="questionid" />
+            <input type="radio"    v-bind:value="optionvalue1" name="optradio"  checked ><label   class="radio-inline">{{optiontext1}}</label>
+            <input type="radio"   v-bind:value="optionvalue2" name="optradio"  ><label   class="radio-inline">{{optiontext2}}</label>
+            <input type="radio"     v-bind:value="optionvalue3" name="optradio"  ><label   class="radio-inline">{{optiontext3}}</label>
+            <br><br><br>
+            <input v-on:click="toanswer" class="btn btn-default " type="submit" value="Ответить">
+
+            <br><br>
+            <span id="result" class="label label-default">{{resulttext}}</span>
+        </div>
+
+    </form>
+    <button v-on:click="nextquestion" class="btn btn-default text-center">След вопрос</button>
+
+     </div>
+
+
+
+    <script type="text/javascript">
+        //вообще не нужно использовать JQuery для ajax calls, т.к.  JQuery намного тяжелее Vue.js (нужно использовать спец библиотеки(vue-resources,laracraft etc))
+
+        var vm = new Vue
+            ({
+                el: '#app',
+                data:
+                {
+                    questiontext: 'loading...',
+                    questionid: '',
+
+                    
+                    resulttext: '',
+
+                     
+                   // selected: '',   //vm.selected==vm.optionvalue (selected)
+                   /*options: [
+                       { optiontext1: 'option1', optionvalue1: '' },
+                       { optiontext2: 'option2', optionvalue2: '' },
+                       { optiontext3: 'option3', optionvalue3: '' }
+                   ]*/
+                   optiontext1: 'option1',
+                   optiontext2: 'option2',
+                   optiontext3: 'option3',
+                   optionvalue1: '',
+                   optionvalue2: '',
+                   optionvalue3: '',
+                    
+
+                },
+
+                created: function() {
+                    var self = this;
+                    $.ajax({
+                        url: 'api/quiz',
+                        method: 'GET',
+                        success: function (data) {
+                            self.resulttext = 'результат';
+                            self.optiontext1 = data.Options[0]["OptionText"];
+
+                            self.optiontext2 = data.Options[1]["OptionText"];
+
+                            self.optiontext3 = data.Options[2]["OptionText"];
+
+                            self.questiontext = data.QuestionText;
+                            self.questionid = data.QuestionId;
+                            self.optionvalue1 = data.Options[0]["OptionId"];
+                            self.optionvalue2 = data.Options[1]["OptionId"];
+                            self.optionvalue3 = data.Options[2]["OptionId"];
+                        },
+                        error: function (error) {
+                            questiontext = 'Something went wrong. Please try again later';
+                        }
+                    });
+                },
+                methods: {
+                     
+                    nextquestion: function () { //function() {...} creates a new scope inside. If you use this inside this function, it does not refer to outer scope.
+                        var self = this; //that's why we need this string
+                        $.ajax
+                            ({
+                                url: 'api/quiz',
+                                type: 'GET',
+
+                                dataType: 'JSON',
+                                success: function (data) {
+                                    self.resulttext = 'результат';
+                                    self.optiontext1 = data.Options[0]["OptionText"];
+
+                                    self.optiontext2 = data.Options[1]["OptionText"];
+
+                                    self.optiontext3 = data.Options[2]["OptionText"];
+
+                                    self.questiontext = data.QuestionText;
+                                    self.questionid = data.QuestionId;
+                                    self.optionvalue1 = data.Options[0]["OptionId"];
+                                    self.optionvalue2 = data.Options[1]["OptionId"];
+                                    self.optionvalue3 = data.Options[2]["OptionId"];
+
+                                },
+                                error: function () {
+                                    questiontext='Something went wrong. Please try again later';
+                                }
+                            });
+                    },
+                    toanswer: function()
+                    {
+                        var self = this;
+                        var answer =
+                            {
+                                OptionId: $('input[name=optradio]:checked').val(), //self.selected ////vm.selected==vm.optionvalue(selected)
+                                QuestionId: self.questionid,
+                            };
+                        $.ajax({
+                            url: '/api/quiz/answer',
+                            type: 'POST',
+                            data: JSON.stringify(answer),
+                            contentType: "application/json;charset=utf-8",
+                            dataType: 'text',
+                            success: function (data) {                             
+                                if (data == 'false')
+                                    self.resulttext='неправильно';
+                                if (data == 'true')
+                                    self.resulttext='правильно';
+                            }
+
+                        });
+                    },
+                },
+                });
+               
+         
+    </script>
+</body >
+</html >
